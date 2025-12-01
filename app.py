@@ -62,13 +62,12 @@ def download_video():
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info)
+            filename = info['filepath']
 
         if not os.path.exists(filename):
             return jsonify({'success': False, 'error': 'Download failed, file not found'}), 500
 
         return send_file(filename, as_attachment=True)
-
     except Exception as e:
         print("Download error:", str(e))
         return jsonify({'success': False, 'error': str(e)}), 500

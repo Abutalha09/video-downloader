@@ -165,10 +165,50 @@
       border: 2px solid transparent;
       text-align: center;
       min-width: 180px;
+      animation: pulse 2s infinite;
     }
     .selector-box.active, .selector-box:hover {
       background: var(--primary-color);
       color: #fff;
+    }
+    #instagramBox.active {
+      background: #ef2c8dff;
+      color: #fff;
+    }
+    .selector-box.clicked {
+      animation: clickFlash 0.5s ease-out;
+    }
+    #instagramBox.clicked {
+      animation: clickFlashPink 0.5s ease-out;
+    }
+    @keyframes clickFlash {
+      0% { box-shadow: 0 0 0 0 rgba(239, 82, 153, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+    }
+    @keyframes clickFlashPink {
+      0% { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 105, 180, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0); }
+    }
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+    }
+    @keyframes glowPink {
+      0%, 100% {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        background: var(--secondary-color);
+      }
+      50% {
+        box-shadow: 0 4px 20px rgba(255, 105, 180, 0.6);
+        background: #ff69b4;
+      }
+    }
   </style>
 </head>
 <body>
