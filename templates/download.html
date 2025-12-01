@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Video Downloader</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #ff0000;
+      --secondary-color: #282828;
+      --accent-color: #007bff;
+      --light-bg: #f8f9fa;
+      --dark-bg: #212529;
+    }
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      /* max-height: 100vh; */
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .main-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+    .header {
+      background: var(--secondary-color);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+      position: relative;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--primary-color);
+    }
+    .youtube-icon {
+      color: var(--primary-color);
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .form-container { padding: 2rem; }
+    .url-input {
+      border-radius: 50px;
+      padding: 1rem 1.5rem;
+      border: 2px solid #e9ecef;
+      transition: all 0.3s ease;
+    }
+    .url-input:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    .botao {
+      width: 125px;
+      height: 45px;
+      border-radius: 20px;
+      border: none;
+      box-shadow: 1px 1px rgba(107, 221, 215, 0.37);
+      padding: 5px 10px;
+      background: rgb(47,93,197);
+      background: linear-gradient(160deg, rgba(47,93,197,1) 0%, rgba(46,86,194,1) 5%, rgba(47,93,197,1) 11%, rgba(59,190,230,1) 57%, rgba(0,212,255,1) 71%);
+      color: #fff;
+      font-family: Roboto, sans-serif;
+      font-weight: 505;
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      filter: drop-shadow(0 0 10px rgba(59, 190, 230, 0.568));
+      transition: .5s linear;
+    }
+
+    .botao .mysvg {
+      display: none;
+    }
+
+    .botao:hover {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      transition: .5s linear;
+    }
+
+    .botao:hover .texto {
+      display: none;
+    }
+
+    .botao:hover .mysvg {
+      display: inline;
+    }
+
+    .botao:hover::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      width: 100%;
+      height: 100%;
+      border: 3.5px solid transparent;
+      border-top: 3.5px solid #fff;
+      border-right: 3.5px solid #fff;
+      border-radius: 50%;
+      animation: animateC 2s linear infinite;
+    }
+
+    @keyframes animateC {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+    .loading-spinner {
+      display: none;
+      width: 3rem;
+      height: 3rem;
+      border: 4px solid #f3fd66;
+      border-top: 4px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 2rem auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .alert-box { display: none; border-radius: 10px; margin-top: 1rem; }
+    @media (max-width: 768px) {
+      .main-container { margin: 1rem; border-radius: 15px; }
+      .header { padding: 1.5rem; }
+      .form-container { padding: 1.5rem; }
+    }
+    .selector-boxes {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    .selector-box {
+      background: var(--secondary-color);
+      color: white;
+      border-radius: 15px;
+      padding: 1.5rem 2.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      font-size: 1.5rem;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+      border: 2px solid transparent;
+      text-align: center;
+      min-width: 180px;
+    }
+    .selector-box.active, .selector-box:hover {
+      background: var(--primary-color);
+      color: #fff;
+  </style>
+</head>
+<body>
+  <div class="container py-5">
+    <div class="selector-boxes mb-4">
+      <div class="selector-box active" id="youtubeBox">YouTube</div>
+      <div class="selector-box" id="instagramBox">Instagram</div>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-md-10">
+        <div class="main-container">
+          <!-- Header -->
+          <div class="header" id="youtubeHeader">
+            <i class="fab fa-youtube youtube-icon"></i>
+            <h1 class="mb-3">YouTube Video Downloader</h1>
+            <p class="mb-0">Download your favorite YouTube videos in high quality</p>
+          </div>
+          <div class="header" id="instagramHeader" style="display:none;">
+            <i class="fab fa-instagram youtube-icon" style="color:#E1306C"></i>
+            <h1 class="mb-3">Instagram Downloader</h1>
+            <p class="mb-0">Download Instagram posts and reels</p>
+          </div>
+
+          <!-- YouTube Form -->
+          <div class="form-container" id="youtubeForm">
+            <form id="downloadForm">
+              <div class="mb-4">
+                <label for="videoUrl" class="form-label fw-bold">YouTube Video URL</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fas fa-link text-muted"></i>
+                  </span>
+                  <input type="url" class="form-control url-input" id="videoUrl"
+                         placeholder="https://youtube.com/watch?v=..." required>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Mode</label>
+                <select id="mode" class="form-select">
+                  <option value="video" selected>Video</option>
+                  <option value="audio">Audio (MP3)</option>
+                </select>
+              </div>
+
+              <div class="mb-3" id="qualityDiv">
+                <label class="form-label fw-bold">Quality</label>
+                <select id="quality" class="form-select">
+                  <option value="best" selected>Best Available</option>
+                  <option value="360p">360p</option>
+                  <option value="720p">720p</option>
+                  <option value="1080p">1080p</option>
+                </select>
+              </div>
+
+              <div class="text-center">
+                <button class="botao instagram">
+                  <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mysvg"><g id="SVGRepo_bgCarrier" stroke-width="0">
+                    </g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier">
+                       <g id="Interface / Download">
+                       <path id="Vector" d="M6 21H18M12 3V17M12 17L17 12M12 17L7 12" stroke="#f1f1f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                       </path>
+                    </g> </g>
+                  </svg>
+                  <span class="texto">Download</span>
+                </button>
+              </div>
+            </form>
+
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loadingSpinner"></div>
+
+            <!-- Alerts -->
+            <div class="alert alert-danger alert-box" id="errorAlert" role="alert"></div>
+            <div class="alert alert-success alert-box" id="successAlert" role="alert"></div>
+          </div>
+
+          <!-- Instagram Form -->
+          <div class="form-container" id="instagramForm" style="display:none;">
+            <form id="instaDownloadForm">
+              <div class="mb-4">
+                <label for="instaUrl" class="form-label fw-bold">Instagram Post/Reel URL</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fab fa-instagram text-muted"></i>
+                  </span>
+                  <input type="url" class="form-control url-input" id="instaUrl"
+                         placeholder="https://instagram.com/p/..." required>
+                </div>
+              </div>
+              <div class="text-center">
+                <button class="botao">
+                  <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mysvg"><g id="SVGRepo_bgCarrier" stroke-width="0">
+                    </g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier">
+                       <g id="Interface / Download"> 
+                       <path id="Vector" d="M6 21H18M12 3V17M12 17L17 12M12 17L7 12" stroke="#f1f1f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                       </path>
+                    </g> </g>
+                  </svg>
+                  <span class="texto">Download</span>
+                </button>
+              </div>
+            </form>
+            <div class="loading-spinner" id="instaLoadingSpinner"></div>
+            <div class="alert alert-danger alert-box" id="instaErrorAlert" role="alert"></div>
+            <div class="alert alert-success alert-box" id="instaSuccessAlert" role="alert"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const form = document.getElementById('downloadForm');
+  const videoUrlInput = document.getElementById('videoUrl');
+  const modeSelect = document.getElementById('mode');
+  const qualityDiv = document.getElementById('qualityDiv');
+  const qualitySelect = document.getElementById('quality');
+  const loadingSpinner = document.getElementById('loadingSpinner');
+  const errorAlert = document.getElementById('errorAlert');
+  const successAlert = document.getElementById('successAlert');
+
+  const instaForm = document.getElementById('instaDownloadForm');
+  const instaUrlInput = document.getElementById('instaUrl');
+  const instaLoadingSpinner = document.getElementById('instaLoadingSpinner');
+  const instaErrorAlert = document.getElementById('instaErrorAlert');
+  const instaSuccessAlert = document.getElementById('instaSuccessAlert');
+
+  modeSelect.addEventListener('change', () => {
+    qualityDiv.style.display = (modeSelect.value === 'audio') ? 'none' : 'block';
+    if (modeSelect.value === 'video') {
+      qualitySelect.value = 'best';
+    }
+  });
+
+  function showLoading(spinnerId) {
+    document.getElementById(spinnerId).style.display = 'block';
+  }
+  function hideLoading(spinnerId) {
+    document.getElementById(spinnerId).style.display = 'none';
+  }
+  function showError(msg, alertId) {
+    const alertBox = document.getElementById(alertId);
+    alertBox.textContent = msg;
+    alertBox.style.display = 'block';
+    alertBox.classList.remove('alert-success');
+    alertBox.classList.add('alert-danger');
+  }
+  function showSuccess(msg, alertId) {
+    const alertBox = document.getElementById(alertId);
+    alertBox.textContent = msg;
+    alertBox.style.display = 'block';
+    alertBox.classList.remove('alert-danger');
+    alertBox.classList.add('alert-success');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const url = videoUrlInput.value.trim();
+    if (!url) return showError('Please enter a YouTube URL', 'errorAlert');
+
+    const mode = modeSelect.value;
+    const quality = qualitySelect.value;
+
+    showLoading('loadingSpinner');
+    errorAlert.style.display = 'none';
+    successAlert.style.display = 'none';
+
+    try {
+      const response = await fetch('/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, mode, quality })
+      });
+
+      if (!response.ok) throw new Error('Download failed: ' + response.statusText);
+
+      const blob = await response.blob();
+      let filename = mode === 'audio' ? 'audio.mp3' : 'video.mp4';
+      const disposition = response.headers.get('Content-Disposition');
+      if (disposition) {
+        const match = disposition.match(/filename\s*=\s*"?([^;\"]+)/);
+        if (match && match[1]) {
+          filename = match[1].trim();
+        }
+      }
+
+      const downloadUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(downloadUrl);
+
+      showSuccess('Download Complete!', 'successAlert');
+    } catch (err) {
+      showError(err.message || 'An unexpected error occurred.', 'errorAlert');
+    } finally {
+      hideLoading('loadingSpinner');
+    }
+  });
+
+  document.getElementById('instagramForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const url = instaUrlInput.value.trim();
+    if (!url) return showError('Please enter an Instagram URL', 'instaErrorAlert');
+
+    showLoading('instaLoadingSpinner');
+    instaErrorAlert.style.display = 'none';
+    instaSuccessAlert.style.display = 'none';
+
+    try {
+      const response = await fetch('/instagram-download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+
+      if (!response.ok) throw new Error('Download failed: ' + response.statusText);
+
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = 'instagram_post';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(downloadUrl);
+
+      showSuccess('Download Complete!', 'instaSuccessAlert');
+    } catch (err) {
+      showError(err.message || 'An unexpected error occurred.', 'instaErrorAlert');
+    } finally {
+      hideLoading('instaLoadingSpinner');
+    }
+  });
+
+  // Selector box switching logic
+  const youtubeBox = document.getElementById('youtubeBox');
+  const instagramBox = document.getElementById('instagramBox');
+  const youtubeForm = document.getElementById('youtubeForm');
+  const instagramForm = document.getElementById('instagramForm');
+  const youtubeHeader = document.getElementById('youtubeHeader');
+  const instagramHeader = document.getElementById('instagramHeader');
+
+  youtubeBox.addEventListener('click', () => {
+    youtubeBox.classList.add('active');
+    instagramBox.classList.remove('active');
+    youtubeForm.style.display = '';
+    instagramForm.style.display = 'none';
+    youtubeHeader.style.display = '';
+    instagramHeader.style.display = 'none';
+  });
+  instagramBox.addEventListener('click', () => {
+    instagramBox.classList.add('active');
+    youtubeBox.classList.remove('active');
+    youtubeForm.style.display = 'none';
+    instagramForm.style.display = '';
+    youtubeHeader.style.display = 'none';
+    instagramHeader.style.display = '';
+  });
+</script>
+</body>
+</html>
